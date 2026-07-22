@@ -1,49 +1,48 @@
 import ReviewCard, { ReviewProps } from "../components/ReviewCard";
+import Link from 'next/link';
 
-const mockReviews: ReviewProps[] = [
-  {
-    id: "1",
-    authorName: "สมชาย ใจดี",
-    authorAvatar: "https://i.pravatar.cc/150?img=11",
-    date: "2 ชั่วโมงที่แล้ว",
-    rating: 5,
-    content: "ระบบ BizXThai ใช้งานง่ายมากครับ เอาสินค้าที่ค้างสต็อกมาแลกเปลี่ยนเป็นคะแนน BX แล้วเอาไปซื้อวัตถุดิบอื่นต่อได้เลย ช่วยลดปัญหาเงินสดขาดมือได้เยอะจริงๆ แนะนำให้ทุกบริษัทลองใช้ดูครับ!",
-    likes: 124,
-  },
-  {
-    id: "2",
-    authorName: "มาลี ค้าขาย",
-    authorAvatar: "https://i.pravatar.cc/150?img=5",
-    date: "เมื่อวานนี้ เวลา 14:30 น.",
-    rating: 5,
-    content: "ชอบระบบ Affiliate ที่สุดเลยค่ะ แชร์ลิงก์ให้เพื่อนมาสมัครแล้วเราได้ส่วนต่างค่าคอมมิชชันด้วย แถมไม่ต้องบังคับรักษายอดเหมือนที่อื่น ทำง่าย ได้เงินจริง โอนไวมากค่ะ",
-    imageUrl: "https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80",
-    likes: 89,
-  },
-  {
-    id: "3",
-    authorName: "B2B Solutions Co.,Ltd",
-    authorAvatar: "https://i.pravatar.cc/150?img=3",
-    date: "3 วันที่แล้ว",
-    rating: 4,
-    content: "เป็นแพลตฟอร์มที่ตอบโจทย์ธุรกิจ B2B ได้ดีมากครับ ระบบจัดการคำสั่งซื้อและรับชำระแบบ Hybrid (Cash + Token) ทำออกมาได้เสถียร หัก 1 ดาวเพราะอยากให้เพิ่มระบบแชทคุยกับผู้ขายโดยตรงได้ในเว็บเลยครับ",
-    likes: 42,
-  },
-  {
-    id: "4",
-    authorName: "น้องนุ่น รีวิวเวอร์",
-    authorAvatar: "https://i.pravatar.cc/150?img=9",
-    date: "5 วันที่แล้ว",
-    rating: 5,
-    content: "UI สวยงามมากกกก! ใช้งานลื่นไหลสุดๆ สมัครผ่าน LINE แป๊บเดียวเสร็จ ไม่ต้องกรอกอะไรให้วุ่นวาย ประทับใจมากค่ะ ❤️",
-    likes: 256,
+export const revalidate = 60; // Revalidate cache every 60 seconds
+
+async function getPosts() {
+  try {
+    const res = await fetch('https://shopee-scraper-vercel.vercel.app/api/blog', { 
+      next: { revalidate: 60 } 
+    });
+    if (!res.ok) return [];
+    const data = await res.json();
+    return data;
+  } catch (err) {
+    console.error("Failed to fetch blog posts:", err);
+    return [];
   }
-];
+}
 
-export default function Home() {
+export default async function Home() {
+  const posts = await getPosts();
+
+  // Convert db posts to ReviewProps format for the mockup UI
+  const formattedReviews: ReviewProps[] = posts.map((post: any) => {
+    // Format date string nicely
+    const dateObj = new Date(post.created_at);
+    const dateStr = dateObj.toLocaleDateString('th-TH', { 
+      year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' 
+    });
+
+    return {
+      id: post.id.toString(),
+      authorName: "BizXThai Review",
+      authorAvatar: "https://i.pravatar.cc/150?img=11",
+      date: dateStr,
+      rating: 5,
+      content: post.excerpt || post.content.substring(0, 150) + "...",
+      imageUrl: post.image_url || undefined,
+      likes: Math.floor(Math.random() * 100) + 10,
+    };
+  });
+
   return (
     <main className="container">
-      <h1 className="page-title">รีวิวจากผู้ใช้งานจริง (BizXThai)</h1>
+      <h1 className="page-title">เทรนด์และรีวิวสินค้า (BizXThai)</h1>
       
       {/* Create Post Input Mockup */}
       <div style={{ backgroundColor: "#fff", padding: "16px", borderRadius: "8px", boxShadow: "var(--shadow)", marginBottom: "20px", display: "flex", gap: "12px", alignItems: "center" }}>
@@ -51,15 +50,25 @@ export default function Home() {
           👤
         </div>
         <div style={{ backgroundColor: "var(--bg-color)", padding: "10px 16px", borderRadius: "20px", color: "var(--text-secondary)", flex: 1, cursor: "pointer" }}>
-          คุณคิดอย่างไรกับ BizXThai? เขียนรีวิวเลย...
+          อัปเดตเทรนด์สินค้าล่าสุดวันนี้...
         </div>
       </div>
 
       {/* Reviews Feed */}
       <div>
-        {mockReviews.map((review) => (
-          <ReviewCard key={review.id} review={review} />
-        ))}
+        {formattedReviews.length > 0 ? (
+          formattedReviews.map((review) => (
+            <div key={review.id} style={{ marginBottom: '20px' }}>
+              <Link href={`/review/${review.id}`} style={{ textDecoration: 'none', color: 'inherit' }}>
+                <ReviewCard review={review} />
+              </Link>
+            </div>
+          ))
+        ) : (
+          <div style={{ textAlign: "center", padding: "40px", color: "var(--text-secondary)" }}>
+            <p>ยังไม่มีบทความในขณะนี้ รอ AI โพสต์บทความแรก...</p>
+          </div>
+        )}
       </div>
     </main>
   );
