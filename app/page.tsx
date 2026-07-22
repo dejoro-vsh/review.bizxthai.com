@@ -1,5 +1,8 @@
-import ReviewCard, { ReviewProps } from "../components/ReviewCard";
 import Link from 'next/link';
+import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { MessageCircle, ThumbsUp, Share2, Clock } from "lucide-react";
 
 export const revalidate = 60; // Revalidate cache every 60 seconds
 
@@ -9,8 +12,7 @@ async function getPosts() {
       next: { revalidate: 60 } 
     });
     if (!res.ok) return [];
-    const data = await res.json();
-    return data;
+    return await res.json();
   } catch (err) {
     console.error("Failed to fetch blog posts:", err);
     return [];
@@ -20,9 +22,7 @@ async function getPosts() {
 export default async function Home() {
   const posts = await getPosts();
 
-  // Convert db posts to ReviewProps format for the mockup UI
-  const formattedReviews: ReviewProps[] = posts.map((post: any) => {
-    // Format date string nicely
+  const formattedReviews = posts.map((post: any) => {
     const dateObj = new Date(post.created_at);
     const dateStr = dateObj.toLocaleDateString('th-TH', { 
       year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' 
@@ -31,44 +31,121 @@ export default async function Home() {
     return {
       id: post.id.toString(),
       slug: post.slug || post.id.toString(),
+      title: post.title || "บทความรีวิว",
       authorName: "BizXThai Review",
       authorAvatar: "https://i.pravatar.cc/150?img=11",
       date: dateStr,
-      rating: 5,
-      content: post.excerpt || post.content.substring(0, 150) + "...",
+      content: post.excerpt || (post.content ? post.content.substring(0, 150) + "..." : ""),
       imageUrl: post.image_url || undefined,
       likes: Math.floor(Math.random() * 100) + 10,
     };
   });
 
   return (
-    <main className="container">
-      <h1 className="page-title">เทรนด์และรีวิวสินค้า (BizXThai)</h1>
+    <div className="container max-w-screen-md mx-auto py-8 px-4">
       
       {/* Create Post Input Mockup */}
-      <div style={{ backgroundColor: "#fff", padding: "16px", borderRadius: "8px", boxShadow: "var(--shadow)", marginBottom: "20px", display: "flex", gap: "12px", alignItems: "center" }}>
-        <div style={{ width: "40px", height: "40px", borderRadius: "50%", backgroundColor: "#e4e6eb", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "20px" }}>
-          👤
-        </div>
-        <div style={{ backgroundColor: "var(--bg-color)", padding: "10px 16px", borderRadius: "20px", color: "var(--text-secondary)", flex: 1, cursor: "pointer" }}>
-          อัปเดตเทรนด์สินค้าล่าสุดวันนี้...
-        </div>
+      <Card className="mb-8 rounded-2xl shadow-sm border-border bg-card">
+        <CardContent className="p-4 flex gap-3 items-center">
+          <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center text-xl shrink-0 overflow-hidden">
+            <img src="https://i.pravatar.cc/150?img=11" alt="Avatar" className="w-full h-full object-cover" />
+          </div>
+          <div className="bg-muted px-4 py-2.5 rounded-full text-muted-foreground flex-1 cursor-pointer hover:bg-muted/80 transition-colors text-sm">
+            คุณกำลังสนใจสินค้าเทรนด์ไหนอยู่...
+          </div>
+        </CardContent>
+      </Card>
+
+      <div className="flex items-center justify-between mb-6">
+        <h1 className="text-2xl font-bold tracking-tight text-foreground">
+          เทรนด์และรีวิวสินค้าล่าสุด
+        </h1>
       </div>
 
-      {/* Reviews Feed */}
-      <div>
+      <div className="space-y-6">
         {formattedReviews.length > 0 ? (
-          formattedReviews.map((review) => (
-            <div key={review.id} style={{ marginBottom: '20px' }}>
-              <ReviewCard review={review} />
-            </div>
+          formattedReviews.map((review: any) => (
+            <Card key={review.id} className="overflow-hidden shadow-sm hover:shadow-md transition-shadow duration-200 border-border bg-card rounded-xl">
+              <CardHeader className="p-4 pb-2">
+                <div className="flex items-center gap-3">
+                  <img src={review.authorAvatar} alt={review.authorName} className="w-10 h-10 rounded-full object-cover ring-2 ring-background" />
+                  <div className="flex flex-col">
+                    <span className="font-semibold text-sm text-foreground hover:underline cursor-pointer">
+                      {review.authorName}
+                    </span>
+                    <div className="flex items-center text-xs text-muted-foreground gap-1">
+                      <span>{review.date}</span>
+                      <span>·</span>
+                      <span className="text-yellow-400 text-[10px]">★★★★★</span>
+                    </div>
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent className="p-4 pt-2">
+                <div 
+                  className="text-sm text-foreground leading-relaxed mb-3"
+                  dangerouslySetInnerHTML={{ 
+                    __html: review.content
+                      .replace(/```[a-z]*\s*|\s*```/gi, '')
+                      .replace(/&lt;/g, '<')
+                      .replace(/&gt;/g, '>')
+                      .replace(/&quot;/g, '"')
+                      .replace(/&#39;/g, "'")
+                      .replace(/&amp;/g, '&')
+                  }} 
+                />
+                
+                {review.imageUrl && (
+                  <Link href={`/review/${review.slug}`} className="block relative w-full h-64 sm:h-80 md:h-96 rounded-lg overflow-hidden mb-2 group">
+                    <img 
+                      src={review.imageUrl} 
+                      alt="Review attachment" 
+                      className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                    />
+                    <div className="absolute inset-0 bg-black/5 group-hover:bg-transparent transition-colors" />
+                  </Link>
+                )}
+
+                <div className="flex items-center justify-between text-muted-foreground text-xs px-1 mt-3">
+                  <div className="flex items-center gap-1.5">
+                    <div className="bg-primary text-primary-foreground rounded-full p-1 w-5 h-5 flex items-center justify-center">
+                      <ThumbsUp className="w-3 h-3" />
+                    </div>
+                    <span>{review.likes} คนถูกใจสิ่งนี้</span>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <span>12 ความคิดเห็น</span>
+                  </div>
+                </div>
+              </CardContent>
+              <div className="px-4 pb-2">
+                <div className="border-t border-border pt-2 flex items-center justify-between">
+                  <Button variant="ghost" className="flex-1 text-muted-foreground font-medium rounded-md gap-2 h-9">
+                    <ThumbsUp className="w-4 h-4" /> ถูกใจ
+                  </Button>
+                  <Button variant="ghost" className="flex-1 text-muted-foreground font-medium rounded-md gap-2 h-9">
+                    <MessageCircle className="w-4 h-4" /> แสดงความคิดเห็น
+                  </Button>
+                  <Button variant="ghost" className="flex-1 text-muted-foreground font-medium rounded-md gap-2 h-9">
+                    <Share2 className="w-4 h-4" /> แชร์
+                  </Button>
+                </div>
+              </div>
+              <div className="px-4 pb-4 pt-1">
+                 <Link href={`/review/${review.slug}`}>
+                    <Button className="w-full font-semibold rounded-lg bg-primary/10 text-primary hover:bg-primary/20 hover:text-primary">
+                       อ่านรีวิวฉบับเต็ม ➔
+                    </Button>
+                 </Link>
+              </div>
+            </Card>
           ))
         ) : (
-          <div style={{ textAlign: "center", padding: "40px", color: "var(--text-secondary)" }}>
-            <p>ยังไม่มีบทความในขณะนี้ รอ AI โพสต์บทความแรก...</p>
-          </div>
+          <Card className="p-12 text-center border-dashed">
+            <p className="text-muted-foreground font-medium">ยังไม่มีบทความในขณะนี้ รอ AI โพสต์บทความแรก...</p>
+          </Card>
         )}
       </div>
-    </main>
+    </div>
   );
 }
