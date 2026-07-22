@@ -5,7 +5,7 @@ export const revalidate = 60;
 
 async function getPost(slug: string) {
   try {
-    const res = await fetch(`https://shopee-scraper-vercel.vercel.app/api/blog/${slug}`, {
+    const res = await fetch(`https://shopee-scraper-vercel.vercel.app/api/blog/${slug}?v=2`, {
       next: { revalidate: 60 }
     });
     if (!res.ok) return null;

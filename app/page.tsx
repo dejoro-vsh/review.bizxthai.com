@@ -5,7 +5,7 @@ export const revalidate = 60; // Revalidate cache every 60 seconds
 
 async function getPosts() {
   try {
-    const res = await fetch('https://shopee-scraper-vercel.vercel.app/api/blog', { 
+    const res = await fetch('https://shopee-scraper-vercel.vercel.app/api/blog?v=2', { 
       next: { revalidate: 60 } 
     });
     if (!res.ok) return [];
