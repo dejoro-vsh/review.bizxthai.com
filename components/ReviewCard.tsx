@@ -45,7 +45,17 @@ export default function ReviewCard({ review }: { review: ReviewProps }) {
       </div>
       
       <div className="review-content">
-        {review.content}
+        <div 
+          dangerouslySetInnerHTML={{ 
+            __html: review.content
+              .replace(/```[a-z]*\s*|\s*```/gi, '')
+              .replace(/&lt;/g, '<')
+              .replace(/&gt;/g, '>')
+              .replace(/&quot;/g, '"')
+              .replace(/&#39;/g, "'")
+              .replace(/&amp;/g, '&')
+          }} 
+        />
         <div style={{ marginTop: "10px" }}>
           <Link 
             href={`/review/${review.slug}`} 
