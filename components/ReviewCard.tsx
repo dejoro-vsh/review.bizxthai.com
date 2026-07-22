@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 
 export interface ReviewProps {
   id: string;
@@ -44,6 +45,14 @@ export default function ReviewCard({ review }: { review: ReviewProps }) {
       
       <div className="review-content">
         {review.content}
+        <div style={{ marginTop: "10px" }}>
+          <Link 
+            href={`/review/${review.id}`} 
+            style={{ color: "var(--primary-color)", fontWeight: "bold", textDecoration: "none" }}
+          >
+            อ่านบทความเต็ม ➔
+          </Link>
+        </div>
       </div>
 
       {review.imageUrl && (

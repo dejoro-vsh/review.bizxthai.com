@@ -59,9 +59,7 @@ export default async function Home() {
         {formattedReviews.length > 0 ? (
           formattedReviews.map((review) => (
             <div key={review.id} style={{ marginBottom: '20px' }}>
-              <Link href={`/review/${review.id}`} style={{ textDecoration: 'none', color: 'inherit' }}>
-                <ReviewCard review={review} />
-              </Link>
+              <ReviewCard review={review} />
             </div>
           ))
         ) : (
