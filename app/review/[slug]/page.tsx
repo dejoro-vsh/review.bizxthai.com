@@ -97,7 +97,7 @@ export default async function ReviewPage({ params }: { params: { slug: string } 
         <div 
           className="review-content html-content" 
           style={{ fontSize: "16px", lineHeight: "1.8", marginBottom: "30px" }}
-          dangerouslySetInnerHTML={{ __html: post.content }}
+          dangerouslySetInnerHTML={{ __html: post.content.replace(/```[a-z]*\s*|\s*```/gi, '') }}
         />
 
         {post.affiliate_link && (
