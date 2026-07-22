@@ -30,6 +30,7 @@ export default async function Home() {
 
     return {
       id: post.id.toString(),
+      slug: post.slug || post.id.toString(),
       authorName: "BizXThai Review",
       authorAvatar: "https://i.pravatar.cc/150?img=11",
       date: dateStr,

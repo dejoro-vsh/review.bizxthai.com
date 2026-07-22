@@ -1,10 +1,11 @@
 import Link from 'next/link';
+import { Metadata } from 'next';
 
 export const revalidate = 60;
 
-async function getPost(id: string) {
+async function getPost(slug: string) {
   try {
-    const res = await fetch(`https://shopee-scraper-vercel.vercel.app/api/blog/${id}`, {
+    const res = await fetch(`https://shopee-scraper-vercel.vercel.app/api/blog/${slug}`, {
       next: { revalidate: 60 }
     });
     if (!res.ok) return null;
@@ -15,8 +16,24 @@ async function getPost(id: string) {
   }
 }
 
-export default async function ReviewPage({ params }: { params: { id: string } }) {
-  const post = await getPost(params.id);
+export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
+  const post = await getPost(params.slug);
+  if (!post) {
+    return { title: 'Not Found - BizXThai' };
+  }
+  return {
+    title: `${post.title} | BizXThai รีวิว`,
+    description: post.excerpt || `อ่านรีวิวเต็มๆ สำหรับ ${post.title}`,
+    openGraph: {
+      title: post.title,
+      description: post.excerpt || `อ่านรีวิวเต็มๆ สำหรับ ${post.title}`,
+      images: post.image_url ? [{ url: post.image_url }] : [],
+    },
+  };
+}
+
+export default async function ReviewPage({ params }: { params: { slug: string } }) {
+  const post = await getPost(params.slug);
 
   if (!post) {
     return (
@@ -33,13 +50,32 @@ export default async function ReviewPage({ params }: { params: { id: string } })
     year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' 
   });
 
+  // AIO Structured Data (JSON-LD)
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    "headline": post.title,
+    "description": post.excerpt,
+    "image": post.image_url ? [post.image_url] : [],
+    "datePublished": post.created_at,
+    "author": [{
+        "@type": "Organization",
+        "name": "BizXThai",
+        "url": "https://review.bizxthai.com"
+    }]
+  };
+
   return (
     <main className="container">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
       <Link href="/" style={{ color: "var(--text-secondary)", textDecoration: "none", marginBottom: "20px", display: "inline-block" }}>
         ← กลับหน้าแรก
       </Link>
       
-      <div className="review-card" style={{ padding: "30px" }}>
+      <article className="review-card" style={{ padding: "30px" }}>
         <h1 style={{ fontSize: "28px", marginBottom: "15px", color: "var(--text-color)" }}>{post.title}</h1>
         
         <div className="review-header" style={{ marginBottom: "20px" }}>
@@ -58,9 +94,11 @@ export default async function ReviewPage({ params }: { params: { id: string } })
           </div>
         )}
         
-        <div className="review-content" style={{ fontSize: "16px", lineHeight: "1.8", whiteSpace: "pre-line", marginBottom: "30px" }}>
-          {post.content}
-        </div>
+        <div 
+          className="review-content html-content" 
+          style={{ fontSize: "16px", lineHeight: "1.8", marginBottom: "30px" }}
+          dangerouslySetInnerHTML={{ __html: post.content }}
+        />
 
         {post.affiliate_link && (
           <div style={{ textAlign: "center", marginTop: "30px", padding: "20px", backgroundColor: "#f9f9f9", borderRadius: "12px" }}>
@@ -84,7 +122,7 @@ export default async function ReviewPage({ params }: { params: { id: string } })
             </a>
           </div>
         )}
-      </div>
+      </article>
     </main>
   );
 }

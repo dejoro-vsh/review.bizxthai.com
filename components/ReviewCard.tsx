@@ -5,6 +5,7 @@ import Link from "next/link";
 
 export interface ReviewProps {
   id: string;
+  slug: string;
   authorName: string;
   authorAvatar: string;
   date: string;
@@ -47,7 +48,7 @@ export default function ReviewCard({ review }: { review: ReviewProps }) {
         {review.content}
         <div style={{ marginTop: "10px" }}>
           <Link 
-            href={`/review/${review.id}`} 
+            href={`/review/${review.slug}`} 
             style={{ color: "var(--primary-color)", fontWeight: "bold", textDecoration: "none" }}
           >
             อ่านบทความเต็ม ➔
