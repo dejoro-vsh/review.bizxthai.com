@@ -97,7 +97,7 @@ export default async function ReviewPage({ params }: { params: { slug: string } 
 
         <div className="p-6 sm:p-8 md:p-10">
           <div className="flex gap-2 mb-4">
-             <Badge variant="secondary" className="text-xs">รีวิวสินค้า</Badge>
+             <Badge variant="secondary" className="text-xs">{post.category || 'อื่นๆ'}</Badge>
              <Badge variant="outline" className="text-xs border-primary text-primary">แนะนำ</Badge>
           </div>
 

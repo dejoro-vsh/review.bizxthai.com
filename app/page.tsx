@@ -31,6 +31,7 @@ export default async function Home() {
     return {
       id: post.id.toString(),
       slug: post.slug || post.id.toString(),
+      category: post.category || "อื่นๆ",
       title: post.title || "บทความรีวิว",
       authorName: "BizXThai Review",
       authorAvatar: "https://i.pravatar.cc/150?img=11",
@@ -102,7 +103,9 @@ export default async function Home() {
                       alt="Review attachment" 
                       className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
                     />
-                    <div className="absolute inset-0 bg-black/5 group-hover:bg-transparent transition-colors" />
+                    <Badge variant="secondary" className="absolute top-4 left-4 bg-black/60 text-white hover:bg-black/80 backdrop-blur-sm border-none">
+                      {review.category}
+                    </Badge>
                   </Link>
                 )}
 
