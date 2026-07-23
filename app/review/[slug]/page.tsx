@@ -142,11 +142,11 @@ export default async function ReviewPage({ params }: { params: { slug: string } 
                   href={post.affiliate_link} 
                   target="_blank" 
                   rel="noopener noreferrer"
-                  className="inline-block"
+                  className="block w-full sm:inline-block"
                 >
-                  <Button size="lg" className="rounded-full px-8 py-6 text-base shadow-lg shadow-primary/25 hover:scale-105 transition-transform duration-200">
-                    <ShoppingCart className="w-5 h-5 mr-2" />
-                    ดูรายละเอียด / สั่งซื้อบน Shopee
+                  <Button size="lg" className="w-full sm:w-auto h-auto rounded-full px-4 sm:px-8 py-4 sm:py-6 text-sm sm:text-base whitespace-normal shadow-lg shadow-primary/25 hover:scale-105 transition-transform duration-200">
+                    <ShoppingCart className="w-5 h-5 mr-2 shrink-0" />
+                    <span>ดูรายละเอียด / สั่งซื้อบน Shopee</span>
                   </Button>
                 </a>
               </div>
