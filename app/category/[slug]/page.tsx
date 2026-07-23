@@ -1,0 +1,158 @@
+import Link from 'next/link';
+import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { MessageCircle, ThumbsUp, Share2, Clock, Folder } from "lucide-react";
+
+export const revalidate = 60;
+
+const categoryMapping: Record<string, string> = {
+  'it-gadgets': 'ไอที & แกดเจ็ต',
+  'home-appliances': 'เครื่องใช้ในบ้าน',
+  'health-beauty': 'สุขภาพ & ความงาม',
+  'sports-lifestyle': 'กีฬา & ไลฟ์สไตล์'
+};
+
+async function getPosts() {
+  try {
+    const res = await fetch('https://shopee-scraper-vercel.vercel.app/api/blog?v=2', { 
+      next: { revalidate: 60 } 
+    });
+    if (!res.ok) return [];
+    return await res.json();
+  } catch (err) {
+    console.error("Failed to fetch blog posts:", err);
+    return [];
+  }
+}
+
+export default async function CategoryPage({ params }: { params: { slug: string } }) {
+  const posts = await getPosts();
+  const categoryName = categoryMapping[params.slug] || 'หมวดหมู่';
+
+  const formattedReviews = posts
+    .filter((post: any) => (post.category || 'อื่นๆ') === categoryName)
+    .map((post: any) => {
+    const dateObj = new Date(post.created_at);
+    const dateStr = dateObj.toLocaleDateString('th-TH', { 
+      year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' 
+    });
+
+    return {
+      id: post.id.toString(),
+      slug: post.slug || post.id.toString(),
+      category: post.category || "อื่นๆ",
+      title: post.title || "บทความรีวิว",
+      authorName: "BizXThai Review",
+      authorAvatar: "https://i.pravatar.cc/150?img=11",
+      date: dateStr,
+      content: post.excerpt || (post.content ? post.content.substring(0, 150) + "..." : ""),
+      imageUrl: post.image_url || undefined,
+      likes: Math.floor(Math.random() * 100) + 10,
+    };
+  });
+
+  return (
+    <div className="container max-w-screen-md mx-auto py-8 px-4">
+      
+      <div className="flex items-center gap-3 mb-6 bg-card p-6 rounded-2xl border border-border shadow-sm">
+        <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center text-primary">
+            <Folder className="w-6 h-6" />
+        </div>
+        <div>
+            <h1 className="text-2xl font-bold tracking-tight text-foreground">
+            หมวดหมู่: {categoryName}
+            </h1>
+            <p className="text-muted-foreground text-sm">บทความรีวิวทั้งหมดในหมวดหมู่นี้</p>
+        </div>
+      </div>
+
+      <div className="space-y-6">
+        {formattedReviews.length > 0 ? (
+          formattedReviews.map((review: any) => (
+            <Card key={review.id} className="overflow-hidden shadow-sm hover:shadow-md transition-shadow duration-200 border-border bg-card rounded-xl">
+              <CardHeader className="p-4 pb-2">
+                <div className="flex items-center gap-3">
+                  <img src={review.authorAvatar} alt={review.authorName} className="w-10 h-10 rounded-full object-cover ring-2 ring-background" />
+                  <div className="flex flex-col">
+                    <span className="font-semibold text-sm text-foreground hover:underline cursor-pointer">
+                      {review.authorName}
+                    </span>
+                    <div className="flex items-center text-xs text-muted-foreground gap-1">
+                      <span>{review.date}</span>
+                      <span>·</span>
+                      <span className="text-yellow-400 text-[10px]">★★★★★</span>
+                    </div>
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent className="p-4 pt-2">
+                <div 
+                  className="text-sm text-foreground leading-relaxed mb-3"
+                  dangerouslySetInnerHTML={{ 
+                    __html: review.content
+                      .replace(/```[a-z]*\s*|\s*```/gi, '')
+                      .replace(/&lt;/g, '<')
+                      .replace(/&gt;/g, '>')
+                      .replace(/&quot;/g, '"')
+                      .replace(/&#39;/g, "'")
+                      .replace(/&amp;/g, '&')
+                  }} 
+                />
+                
+                {review.imageUrl && (
+                  <Link href={`/review/${review.slug}`} className="block relative w-full h-64 sm:h-80 md:h-96 rounded-lg overflow-hidden mb-2 group">
+                    <img 
+                      src={review.imageUrl} 
+                      alt="Review attachment" 
+                      className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                    />
+                    <Badge variant="secondary" className="absolute top-4 left-4 bg-black/60 text-white hover:bg-black/80 backdrop-blur-sm border-none">
+                      {review.category}
+                    </Badge>
+                  </Link>
+                )}
+
+                <div className="flex items-center justify-between text-muted-foreground text-xs px-1 mt-3">
+                  <div className="flex items-center gap-1.5">
+                    <div className="bg-primary text-primary-foreground rounded-full p-1 w-5 h-5 flex items-center justify-center">
+                      <ThumbsUp className="w-3 h-3" />
+                    </div>
+                    <span>{review.likes} คนถูกใจสิ่งนี้</span>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <span>12 ความคิดเห็น</span>
+                  </div>
+                </div>
+              </CardContent>
+              <div className="px-4 pb-2">
+                <div className="border-t border-border pt-2 flex items-center justify-between">
+                  <Button variant="ghost" className="flex-1 text-muted-foreground font-medium rounded-md gap-2 h-9">
+                    <ThumbsUp className="w-4 h-4" /> ถูกใจ
+                  </Button>
+                  <Button variant="ghost" className="flex-1 text-muted-foreground font-medium rounded-md gap-2 h-9">
+                    <MessageCircle className="w-4 h-4" /> แสดงความคิดเห็น
+                  </Button>
+                  <Button variant="ghost" className="flex-1 text-muted-foreground font-medium rounded-md gap-2 h-9">
+                    <Share2 className="w-4 h-4" /> แชร์
+                  </Button>
+                </div>
+              </div>
+              <div className="px-4 pb-4 pt-1">
+                 <Link href={`/review/${review.slug}`}>
+                    <Button className="w-full font-semibold rounded-lg bg-primary/10 text-primary hover:bg-primary/20 hover:text-primary">
+                       อ่านรีวิวฉบับเต็ม ➔
+                    </Button>
+                 </Link>
+              </div>
+            </Card>
+          ))
+        ) : (
+          <Card className="p-12 text-center border-dashed">
+            <p className="text-muted-foreground font-medium">ยังไม่มีบทความในหมวดหมู่นี้</p>
+          </Card>
+        )}
+      </div>
+    </div>
+  );
+}
